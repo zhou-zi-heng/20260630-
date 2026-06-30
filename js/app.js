@@ -585,24 +585,25 @@ function onEngTypeChange(){
 function saveEng(){
     const p=S.profiles[S.currentEngId];if(!p)return;
     p.name=document.getElementById('engName').value.trim()||p.name;
+    // ★ 先存引擎类型
     const etEl=document.getElementById('engType');if(etEl)p.engineType=etEl.value;
-    const protoEl=document.getElementById('engProto');
-    if(protoEl)p.protocol=protoEl.value;
-
-    
+    // ★ 协议下拉在生图模式下被隐藏，要防 null
+    const protoEl=document.getElementById('engProto');if(protoEl)p.protocol=protoEl.value;
     p.base=document.getElementById('engBase').value.trim();
     p.key=document.getElementById('engKey').value.trim();
     p.model=document.getElementById('engModel').value.trim();
-    p.useTemp=document.getElementById('engUseTemp').checked;p.temperature=parseFloat(document.getElementById('engTemp').value);
-    p.useMax=document.getElementById('engUseMax').checked;p.max_tokens=parseInt(document.getElementById('engMax').value,10);
-    p.useTopP=document.getElementById('engUseTopP').checked;p.top_p=parseFloat(document.getElementById('engTopP').value);
-    p.useFreq=document.getElementById('engUseFreq').checked;p.frequency_penalty=parseFloat(document.getElementById('engFreq').value);
-    p.useCache=document.getElementById('engUseCache').checked;
+    // 生图引擎不需要这些运行时参数，但读取时防 null
+    const g=(id)=>document.getElementById(id);
+    if(g('engUseTemp')){p.useTemp=g('engUseTemp').checked;p.temperature=parseFloat(g('engTemp').value);}
+    if(g('engUseMax')){p.useMax=g('engUseMax').checked;p.max_tokens=parseInt(g('engMax').value,10);}
+    if(g('engUseTopP')){p.useTopP=g('engUseTopP').checked;p.top_p=parseFloat(g('engTopP').value);}
+    if(g('engUseFreq')){p.useFreq=g('engUseFreq').checked;p.frequency_penalty=parseFloat(g('engFreq').value);}
+    if(g('engUseCache')){p.useCache=g('engUseCache').checked;}
     p.cacheTTL=(p.protocol==='anthropic')?'1h':'5m';
-    p.priceIn=parseFloat(document.getElementById('engPriceIn').value)||0;
-    p.priceOut=parseFloat(document.getElementById('engPriceOut').value)||0;
-    p.priceCacheRead=parseFloat(document.getElementById('engPriceCR').value)||0;
-    p.priceCacheWrite=parseFloat(document.getElementById('engPriceCW').value)||0;
+    if(g('engPriceIn'))p.priceIn=parseFloat(g('engPriceIn').value)||0;
+    if(g('engPriceOut'))p.priceOut=parseFloat(g('engPriceOut').value)||0;
+    if(g('engPriceCR'))p.priceCacheRead=parseFloat(g('engPriceCR').value)||0;
+    if(g('engPriceCW'))p.priceCacheWrite=parseFloat(g('engPriceCW').value)||0;
     scheduleSave();renderEngTabs();renderSB();renderMs();toast('✅ 配置已保存');
 }
 

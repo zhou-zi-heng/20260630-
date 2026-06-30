@@ -101,8 +101,14 @@ const API = (function () {
 
                 if (!resp.ok) {
                     const errText = await resp.text();
-                    throw new Error('HTTP ' + resp.status + ': ' + errText.slice(0, 300));
+                    // 区分 HTML 错误页和 JSON 错误
+                    let detail = errText.slice(0, 400);
+                    if (/<html|<!doctype/i.test(errText)) {
+                        detail = '目标服务器返回错误页（非JSON）。状态码 ' + resp.status + '。可能是模型名错误或端点不支持。原始base: ' + (profile.base || '');
+                    }
+                    throw new Error('HTTP ' + resp.status + ': ' + detail);
                 }
+
                 const data = await resp.json();
                 const imgs = [];
                 (data.data || []).forEach(item => {

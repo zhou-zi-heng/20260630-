@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>6.26版飞凡AI对话界面</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="飞凡AI对话">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.2/markdown-it.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-sub@2.0.0/dist/markdown-it-sub.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-sup@2.0.0/dist/markdown-it-sup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-mark@4.0.0/dist/markdown-it-mark.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@4.0.0/dist/markdown-it-footnote.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@2.1.1/dist/cjs/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-emoji@3.0.0/dist/markdown-it-emoji.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <link rel="stylesheet" href="css/main.css?v=2.7.0">
+    <link rel="stylesheet" href="css/theme.css?v=2.7.0">
+    <style>
+        .mode-switch{display:flex;gap:4px;margin-right:8px}
+        .mode-switch button{padding:5px 12px;font-size:13px;border:1px solid var(--border);background:var(--bg);color:var(--text2);border-radius:8px;cursor:pointer;white-space:nowrap}
+        .mode-switch button.act{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600}
+        .mode-switch button.locked{opacity:.55;cursor:not-allowed}
+        .wf-side{width:300px;flex-shrink:0;display:none;flex-direction:column;border-left:1px solid var(--border);background:var(--bg2,rgba(102,126,234,.04));height:100%;overflow:hidden}
+        .wf-side.show{display:flex}
+        .wf-side-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;flex-shrink:0}
+        .wf-side-x{border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+        .wf-side-body{flex:1;overflow-y:auto;padding:12px 14px}
+        .wf-row{margin-bottom:10px;display:flex;gap:6px}
+        .wf-row select,.wf-row input{padding:7px 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;width:100%}
+        .wf-cmd{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+        .wf-cmd-title{font-weight:600;font-size:13px;margin-bottom:8px}
+        .wf-cmd-input{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;resize:vertical;margin-bottom:8px}
+        .wf-cmd-send{width:100%}
+        .wf-blank{display:flex;flex-wrap:wrap;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px;line-height:2}
+        .wf-blank-txt{white-space:pre-wrap;color:var(--text)}
+        .wf-blank-in{display:inline-block;min-width:36px;border:none;border-bottom:2px solid var(--pri,#667eea);padding:0 4px;margin:0 2px;outline:none;color:var(--pri,#667eea);font-weight:600;background:rgba(102,126,234,.06);border-radius:4px 4px 0 0;line-height:1.6}
+        .wf-blank-in:empty::before{content:attr(data-ph);color:var(--text2);font-weight:400;opacity:.6}
+        .wf-blank-in:focus{background:rgba(102,126,234,.14)}
+        @media (max-width:768px){.wf-side{position:fixed;top:0;right:0;width:85%;max-width:340px;z-index:200;box-shadow:-4px 0 20px rgba(0,0,0,.2)}}
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <div class="sb-ov" id="sbOv" onclick="togSB()"></div>
+    <aside class="sb" id="sb">
+        <div class="sb-hdr"><h1>🚀 飞凡AI对话</h1><button class="btn btn-s" onclick="openM('set')">⚙️</button></div>
+        <div class="sb-body">
+            <div class="badge" id="badge"></div>
+            <div style="display:flex;gap:6px;margin-bottom:5px">
+                <button class="btn btn-p btn-s" style="flex:1" onclick="newChat()">➕ 新建对话</button>
+                <button class="btn btn-s" onclick="addFolder()" title="新建文件夹">📁+</button>
+            </div>
+            <input type="text" class="search" id="schIn" placeholder="🔍 搜索..." oninput="renderSB()">
+            <div class="sl" id="pinLbl" style="display:none">📌 置顶</div><ul class="cl" id="pinList"></ul>
+            <div id="folderArea"></div>
+            <div class="sl">💬 对话</div><ul class="cl" id="chatList"></ul>
+            <div class="sl" id="arcLbl" style="display:none">📦 归档</div><ul class="cl" id="arcList"></ul>
+        </div>
+        <div class="sb-ft"><button class="btn btn-b btn-s" onclick="openM('snap')">📦 快照迁移</button></div>
+    </aside>
+
+    <div class="main">
+        <header class="hdr">
+            <button class="menu-btn" onclick="togSB()">☰</button>
+            <input type="text" class="title-in" id="titleIn" placeholder="标题（建议改成稿子名，便于存档检索）" onchange="updTitle(this.value)">
+            <div class="mode-switch">
+                <button id="modeChatBtn" class="act" onclick="setMode('chat')">💬 自由</button>
+                <button id="modeWfBtn" onclick="setMode('workflow')">🔧 工作流</button>
+            </div>
+            <div class="hdr-acts">
+                <button onclick="openM('cs')" title="会话设置">🎛️</button>
+                <button onclick="openM('exp')" title="导出">📥</button>
+                <button onclick="shareC()" title="加密分享">🔗</button>
+                <button onclick="pinC()" title="置顶" id="pinBtn">📌</button>
+                <button onclick="arcC()" title="归档">📦</button>
+                <button onclick="clrC()" title="清空">🗑️</button>
+                <button onclick="togTheme()" title="切换主题" id="themeBtn">🌙</button>
+            </div>
+        </header>
+
+        <div class="msgs" id="msgsArea">
+            <div class="empty">
+                <div class="ico">🚀</div><p>开始新的对话吧</p>
+                <p style="font-size:12px;opacity:.6;margin-top:4px">支持拖拽 / 粘贴上传文档与图片</p>
+                <p style="font-size:11px;opacity:.5;margin-top:2px">💡 切到 🔧 工作流 使用内置指令；可拖入分享文件继续对话</p>
+            </div>
+        </div>
+
+        <div class="drop-mask" id="dropMask"><div class="drop-mask-inner"><div style="font-size:48px">📥</div><div style="font-size:16px;margin-top:8px">松开以上传文件 / 导入分享对话</div></div></div>
+
+        <div class="inp-area">
+            <div class="inp-wrap">
+                <div style="position:relative">
+                    <button class="att-btn" id="attBtn" onclick="togAtt()">📎</button>
+                    <div class="att-pan" id="attPan">
+                        <div class="fg" style="margin-bottom:6px"><label>上传文件（多选/拖拽/粘贴）</label><input type="file" id="attIn" multiple onchange="onAtt(this)"></div>
+                        <div class="pt"><input type="checkbox" id="attCont" onchange="updAttCont()"><label for="attCont">🔄 持续参考（本批全部）</label></div>
+                        <div id="attListBox" style="display:none"><div class="att-head"><span id="attCount"></span><button onclick="clrAtt()">🗑️ 清空全部</button></div><div class="att-list" id="attList"></div></div>
+                    </div>
+                </div>
+                <div class="inp-box"><textarea id="uIn" placeholder="输入消息... (Enter发送, Shift+Enter换行)" rows="1" onkeydown="hKey(event)" oninput="aRsz(this)"></textarea></div>
+                <button class="send" id="sendBtn" onclick="send()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧工作流栏 -->
+    <aside class="wf-side" id="wfBar">
+        <div class="wf-side-hdr">
+            <span>🔧 工作流</span>
+            <button class="wf-side-x" onclick="setMode('chat')" title="关闭工作流">×</button>
+        </div>
+        <div class="wf-side-body">
+            <div class="wf-row"><select id="wfGroupSel" onchange="onWfGroupChange(this.value)"></select></div>
+            <div class="wf-row"><input type="text" id="wfSearch" class="wf-search" placeholder="🔍 搜索预设名..." oninput="onWfSearch()"></div>
+            <div class="wf-row"><select id="wfPresetSel" onchange="onWfPresetChange(this.value)"></select></div>
+            <div id="wfCmds"></div>
+        </div>
+    </aside>
+</div>
+
+<!-- 模态框：⚙️ 引擎配置 -->
+<div class="mo" id="mo-set"><div class="md"><div class="md-h"><h2>⚙️ 引擎配置</h2><button class="md-x" onclick="closeM('set')">×</button></div><div class="md-b">
+    <div style="padding:12px;background:var(--bg2,rgba(102,126,234,.06));border-radius:10px;margin-bottom:16px">
+        <h4 style="font-size:13px;margin-bottom:10px">👤 全局设置（一次性）</h4>
+        <div class="fg" style="margin-bottom:10px"><label>我的用户名（存档命名 / 分享署名）</label><input type="text" id="userNameIn" placeholder="如：张三" onchange="updUserName(this.value)"></div>
+        <div class="fg" style="margin-bottom:10px"><label>🆕 新建对话默认模式</label><select id="defaultModeSel" onchange="updDefaultMode(this.value)"><option value="free">💬 自由对话</option><option value="workflow">🔧 工作流</option></select><span style="font-size:11px;color:var(--text2)">新建对话默认采用此模式；发送第一条消息后永久锁定</span></div>
+        <div class="fg" style="margin-bottom:10px"><label>📁 局域网自动存档目录</label><div id="archiveInfo" style="font-size:12px;line-height:1.7;margin-bottom:8px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-s btn-p" onclick="chooseArchiveDir()">📂 选择/更换存档目录</button><button class="btn btn-s" onclick="archiveNowBtn()">💾 立即存档一次</button><button class="btn btn-s btn-d" onclick="clearArchiveDir()">✖ 关闭存档</button></div></div>
+        <div class="fg" style="margin-bottom:6px"><label>⏱️ 自动存档间隔</label><select id="archiveIntervalSel" onchange="updArchiveInterval(this.value)"><option value="0">关闭定时（仅回复后存）</option><option value="5">5 分钟</option><option value="10" selected>10 分钟（默认）</option><option value="15">15 分钟</option><option value="60">1 小时</option></select></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:8px;line-height:1.6">💡 选定共享盘后自动写入 <code>标题__用户名__编号.html / .json</code>（覆盖，永远最新）。删除对话不会删除已存档的本地文件。⚠️ 仅 Chrome/Edge；每次重开页面首次保存需点"允许"。</div>
+    </div>
+
+    <!-- 使用提示（新手版） -->
+    <div style="padding:10px;background:var(--pri-l);border-radius:8px;margin-bottom:12px;font-size:11px;line-height:1.7;color:var(--text2)">
+        💡 <strong>三步搞定</strong>：①填 Base URL（如 <code>https://api.openai-proxy.org/v1</code>）②填 API Key ③填模型名。<br>
+        💰 用 Claude 想省钱，把「开启 Prompt 缓存」打勾即可（5分钟内连续聊最省）。<br>
+        ✅ 每轮都发完整对话，缓存只省钱、不丢内容。
+    </div>
+
+    <div class="tabs" id="engTabs"></div><button class="btn btn-s" onclick="addEng()" style="margin-bottom:10px">➕ 新增引擎</button><div id="engForm"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)"><h4 style="font-size:13px;margin-bottom:8px">💾 本地存储</h4><div id="storageInfo" style="font-size:12px;color:var(--text2);line-height:1.8"></div></div>
+</div></div></div>
+
+<!-- 模态框：会话设置 -->
+<div class="mo" id="mo-cs"><div class="md"><div class="md-h"><h2>🎛️ 会话设置</h2><button class="md-x" onclick="closeM('cs')">×</button></div><div class="md-b">
+    <div class="fg"><label>🎭 System Prompt</label><textarea id="spIn" rows="5" placeholder="设定此会话人设..." onchange="updSP(this.value)"></textarea></div>
+    <div class="fg"><label>📚 全局知识库文件（多选）</label><input type="file" id="kbIn" multiple onchange="addKB(this)"><div id="kbList" style="margin-top:8px"></div></div>
+    <div class="fg"><label>⏰ 自动快照间隔</label><select id="snapInterval" onchange="updSnapInterval(this.value)"><option value="0">关闭</option><option value="1">1 分钟</option><option value="5" selected>5 分钟（默认）</option><option value="10">10 分钟</option><option value="30">30 分钟</option><option value="60">60 分钟</option></select><span style="font-size:11px;color:var(--text2)">自动覆盖式备份到本地数据库</span></div>
+</div></div></div>
+
+<!-- 模态框：导出 -->
+<div class="mo" id="mo-exp"><div class="md"><div class="md-h"><h2>📥 导出对话</h2><button class="md-x" onclick="closeM('exp')">×</button></div><div class="md-b">
+    <div class="fg"><label>导出模式</label><select id="expFmt" onchange="updExp()"><option value="full">完整记录 (含提问)</option><option value="pure">纯享正文 (仅AI回答)</option></select></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="btn btn-s" onclick="eTxt()">📄 TXT</button><button class="btn btn-s" onclick="eMd()">📑 Markdown</button><button class="btn btn-s" onclick="eHtml()">🎨 HTML</button><button class="btn btn-s" onclick="eDoc()">📘 Word</button></div>
+    <div class="fg"><label>⚠️ 防拦截备用复制区</label><textarea id="expTA" rows="6" style="font-size:12px" readonly></textarea><button class="btn btn-s" onclick="cpExp()" style="margin-top:6px">📋 全选复制</button></div>
+</div></div></div>
+
+<!-- 模态框：快照迁移 -->
+<div class="mo" id="mo-snap"><div class="md"><div class="md-h"><h2>📦 快照迁移</h2><button class="md-x" onclick="closeM('snap')">×</button></div><div class="md-b">
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">💡 数据已自动保存在本地 IndexedDB。建议定期导出备份。</p>
+    <button class="btn btn-p btn-b" onclick="eSnap()" style="margin-bottom:10px">📥 导出全量快照</button>
+        <div class="fg"><label>📂 导入快照（兼容所有历史版本）</label><input type="file" accept=".json" onchange="iSnap(this)"></div>
+    <div style="margin:10px 0;padding-top:10px;border-top:1px dashed var(--border)">
+        <button class="btn btn-s btn-d btn-b" onclick="rollbackImport()">⏪ 恢复到上次导入前的数据</button>
+        <p style="font-size:11px;color:var(--text2);margin-top:6px;line-height:1.6">💡 如果刚才的导入搞错了，可一键回滚。仅保留<strong>最近一次</strong>导入前的备份，回滚后该备份即清除。</p>
+    </div>
+    <div id="iosW" style="display:none;padding:10px;background:#fff3cd;border-radius:8px;font-size:12px;color:#856404;margin-top:10px">⚠️ iOS Safari 可能清理数据，请定期导出。</div>
+</div></div></div>
+
+<!-- 模态框：存档授权提示 -->
+<div class="mo" id="mo-auth"><div class="md" style="max-width:420px;text-align:center"><div class="md-b" style="padding:28px 24px">
+    <div style="font-size:52px;line-height:1">📁</div><h2 style="margin:14px 0 8px;font-size:18px">开启对话自动存档</h2>
+    <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:6px">检测到你已设置存档目录：<br><strong id="authDirName" style="color:var(--text)">—</strong></p>
+    <p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:22px">点击下方按钮授权，本次浏览期间自动保存（每次重开页面需点一次）。</p>
+    <button onclick="doAuthNow()" style="width:100%;padding:16px;font-size:17px;font-weight:600;color:#fff;background:linear-gradient(135deg,#667eea,#764ba2);border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(102,126,234,.4)">✅ 立即授权并开启存档</button>
+    <button onclick="closeAuthModal()" style="width:100%;padding:10px;margin-top:10px;font-size:13px;color:var(--text2);background:transparent;border:none;cursor:pointer">稍后再说</button>
+</div></div></div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')"><img id="lbImg" src=""></div>
+<div class="tc" id="tc"></div>
+
+<script src="js/utils.js?v=2.7.0"></script>
+<script src="js/storage.js?v=2.7.0"></script>
+<script src="js/api.js?v=2.7.0"></script>
+<script src="js/ui.js?v=2.7.0"></script>
+<script src="js/parsers/text.js?v=2.7.0"></script>
+<script src="js/parsers/csv.js?v=2.7.0"></script>
+<script src="js/parsers/office.js?v=2.7.0"></script>
+<script src="js/parsers/pdf.js?v=2.7.0"></script>
+<script src="js/parser.js?v=2.7.0"></script>
+<script src="js/upload.js?v=2.7.0"></script>
+<script src="js/snapshot.js?v=2.7.0"></script>
+<script src="js/archive.js?v=2.7.0"></script>
+<script src="js/workflow.js?v=2.7.0"></script>
+<script src="js/app.js?v=2.7.0"></script>
+
+</body>
+</html>
+
+
+
+

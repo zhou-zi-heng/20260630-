@@ -23,7 +23,7 @@ export async function onRequest(context) {
 
     const url = new URL(request.url);
     const subPath = url.pathname.replace(/^\/api\//, '');
-    const targetUrl = targetBase.replace(/\/+$/, '') + '/' + subPath + url.search;
+    let targetUrl = targetBase.replace(/\/+$/, '') + '/' + subPath + url.search;
 
     const headers = new Headers();
     const skipHeaders = [
@@ -39,12 +39,42 @@ export async function onRequest(context) {
         headers.set('anthropic-version', '2023-06-01');
     }
 
+    // ★ 关键修复：把 body 读成可重发的 buffer（解决一次性流遇重定向报错）
+    let bodyBuf = undefined;
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+        try {
+            bodyBuf = await request.arrayBuffer();
+        } catch (e) {
+            bodyBuf = undefined;
+        }
+    }
+
+    // ★ 手动处理重定向（最多 5 次），每次都用 buffer 重发，避免流报错
+    async function fetchFollow(u, maxRedirect) {
+        let curUrl = u;
+        for (let i = 0; i <= maxRedirect; i++) {
+            const resp = await fetch(curUrl, {
+                method: request.method,
+                headers: headers,
+                body: bodyBuf,
+                redirect: 'manual',  // 不自动跳，自己处理
+            });
+            // 3xx 重定向
+            if (resp.status >= 300 && resp.status < 400) {
+                const loc = resp.headers.get('location');
+                if (loc) {
+                    // 相对路径转绝对
+                    curUrl = new URL(loc, curUrl).toString();
+                    continue;
+                }
+            }
+            return resp;
+        }
+        throw new Error('重定向次数过多');
+    }
+
     try {
-        const resp = await fetch(targetUrl, {
-            method: request.method,
-            headers: headers,
-            body: (request.method !== 'GET' && request.method !== 'HEAD') ? request.body : undefined,
-        });
+        const resp = await fetchFollow(targetUrl, 5);
         const newHeaders = new Headers(resp.headers);
         newHeaders.set('Access-Control-Allow-Origin', '*');
         newHeaders.set('Access-Control-Expose-Headers', '*');

@@ -52,26 +52,27 @@ export async function onRequest(context) {
     // ★ 手动处理重定向（最多 5 次），每次都用 buffer 重发，避免流报错
     async function fetchFollow(u, maxRedirect) {
         let curUrl = u;
+        const chain = [];
         for (let i = 0; i <= maxRedirect; i++) {
             const resp = await fetch(curUrl, {
                 method: request.method,
                 headers: headers,
                 body: bodyBuf,
-                redirect: 'manual',  // 不自动跳，自己处理
+                redirect: 'manual',
             });
-            // 3xx 重定向
             if (resp.status >= 300 && resp.status < 400) {
                 const loc = resp.headers.get('location');
+                chain.push(resp.status + ' → ' + (loc || '(无location)') + ' [from: ' + curUrl + ']');
                 if (loc) {
-                    // 相对路径转绝对
                     curUrl = new URL(loc, curUrl).toString();
                     continue;
                 }
             }
             return resp;
         }
-        throw new Error('重定向次数过多');
+        throw new Error('重定向次数过多。跳转链路：\n' + chain.join('\n'));
     }
+
 
     try {
         const resp = await fetchFollow(targetUrl, 5);
